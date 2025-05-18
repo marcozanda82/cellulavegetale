@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagramma Interattivo Cellula Vegetale (Feedback Immediato)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 20px;
+            background-color: #f0f0f0;
+            box-sizing: border-box;
+        }
+
+        .container-cellula {
+            position: relative;
+            width: auto; /* O una larghezza fissa se le coordinate dipendono da essa */
+            /* max-width: 1000px; /* Esempio: limita la larghezza massima dell'immagine */
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .container-cellula img {
+            display: block;
+            max-width: 100%; /* Rende l'immagine responsiva */
+            height: auto;
+            /* Se le coordinate sono molto precise per una data dimensione,
+               potresti voler fissare width/height dell'immagine.
+               Es: width: 1000px; */
+        }
+
+        .menu-tendina {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            padding: 5px;
+            border: 1px solid #ccc; /* Bordo di default */
+            border-radius: 4px;
+            background-color: white; /* Sfondo di default */
+            font-size: 12px;
+            min-width: 160px;
+            box-sizing: border-box;
+        }
+
+        /* Posizioni dei menu (top +5px, left +80px rispetto alla tabella originale) */
+        #menu1  { top: 60px;  left: 150px; }
+        #menu2  { top: 175px; left: 120px; }
+        #menu3  { top: 240px; left: 115px; }
+        #menu4  { top: 370px; left: 115px; }
+        #menu5  { top: 465px; left: 115px; }
+        #menu6  { top: 765px; left: 260px; }
+        #menu7  { top: 765px; left: 530px; }
+        #menu8  { top: 605px; left: 1140px;}
+        #menu9  { top: 505px; left: 1140px;}
+        #menu10 { top: 415px; left: 1140px;}
+        #menu11 { top: 325px; left: 1140px;}
+        #menu12 { top: 155px; left: 1150px;}
+        #menu13 { top: 135px; left: 760px; }
+        #menu14 { top: 50px;  left: 700px; }
+        #menu15 { top: 50px;  left: 430px; }
+
+
+        .bottone-verifica {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .bottone-verifica:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-cellula">
+        <img src="https://raw.githubusercontent.com/marcozanda82/cellulavegetale/main/vegetale.png" alt="Diagramma della cellula vegetale">
+
+        <select class="menu-tendina" id="menu1"> </select>
+        <select class="menu-tendina" id="menu2"> </select>
+        <select class="menu-tendina" id="menu3"> </select>
+        <select class="menu-tendina" id="menu4"> </select>
+        <select class="menu-tendina" id="menu5"> </select>
+        <select class="menu-tendina" id="menu6"> </select>
+        <select class="menu-tendina" id="menu7"> </select>
+        <select class="menu-tendina" id="menu8"> </select>
+        <select class="menu-tendina" id="menu9"> </select>
+        <select class="menu-tendina" id="menu10"></select>
+        <select class="menu-tendina" id="menu11"></select>
+        <select class="menu-tendina" id="menu12"></select>
+        <select class="menu-tendina" id="menu13"></select>
+        <select class="menu-tendina" id="menu14"></select>
+        <select class="menu-tendina" id="menu15"></select>
+    </div>
+
+    <button class="bottone-verifica" onclick="aggiornaPunteggioTotale()">Visualizza/Aggiorna Punteggio</button>
+    <div id="risultato-verifica" style="margin-top: 15px; font-size: 18px; font-weight: bold;">Punteggio: 0 su 15</div>
+
+    <script>
+        const opzioniRisposta = [
+            { value: "", text: "Seleziona organulo..." },
+            { value: "dna_cromatina", text: "DNA (cromatina)" },
+            { value: "membrana_cellulare", text: "Membrana cellulare" },
+            { value: "parete_cellulare", text: "Parete cellulare" },
+            { value: "lisosoma", text: "Lisosoma" },
+            { value: "reticolo_endoplasmatico", text: "Reticolo endoplasmatico" },
+            { value: "mitocondrio", text: "Mitocondrio" },
+            { value: "ribosoma", text: "Ribosoma" },
+            { value: "vacuolo", text: "Vacuolo" },
+            { value: "citoplasma", text: "Citoplasma" },
+            { value: "cloropasto", text: "Cloropasto" },
+            { value: "apparato_di_golfi", text: "Apparato di Golgi" },
+            { value: "microtubuli", text: "Microtubuli" },
+            { value: "membrana_nucleare", text: "Membrana nucleare" },
+            { value: "nucleo", text: "Nucleo" },
+            { value: "nucleolo", text: "Nucleolo" }
+        ];
+
+        const risposteCorrette = {
+            "menu1": "dna_cromatina",
+            "menu2": "membrana_cellulare",
+            "menu3": "parete_cellulare",
+            "menu4": "lisosoma",
+            "menu5": "reticolo_endoplasmatico",
+            "menu6": "mitocondrio",
+            "menu7": "ribosoma",
+            "menu8": "vacuolo",
+            "menu9": "citoplasma",
+            "menu10": "cloropasto",
+            "menu11": "apparato_di_golfi",
+            "menu12": "microtubuli",
+            "menu13": "membrana_nucleare",
+            "menu14": "nucleo",
+            "menu15": "nucleolo"
+        };
+
+        // Funzione per valutare la risposta di un singolo menu e applicare lo stile
+        function valutaSingolaRisposta(selectElement) {
+            const rispostaUtente = selectElement.value;
+            const rispostaGiusta = risposteCorrette[selectElement.id];
+
+            selectElement.style.backgroundColor = 'white'; // Reset background
+
+            if (rispostaUtente === "") {
+                selectElement.style.borderColor = '#ccc'; // Bordo di default se "Seleziona..."
+            } else if (rispostaUtente === rispostaGiusta) {
+                selectElement.style.borderColor = 'green'; // Bordo verde per corretto
+            } else {
+                selectElement.style.borderColor = 'red';   // Bordo rosso per errato
+            }
+        }
+
+        // Funzione per calcolare e aggiornare il punteggio totale
+        function aggiornaPunteggioTotale() {
+            let punteggio = 0;
+            const totaleDomande = Object.keys(risposteCorrette).length;
+
+            for (let i = 1; i <= totaleDomande; i++) {
+                const menuId = "menu" + i;
+                const selectElement = document.getElementById(menuId);
+                if (selectElement && selectElement.value === risposteCorrette[menuId]) {
+                    punteggio++;
+                }
+            }
+            const elementoRisultato = document.getElementById('risultato-verifica');
+            elementoRisultato.innerHTML = `Punteggio: ${punteggio} su ${totaleDomande}`;
+        }
+
+        // Popola i menu a tendina e aggiunge gli event listener
+        for (let i = 1; i <= 15; i++) {
+            const selectMenu = document.getElementById('menu' + i);
+            if (selectMenu) {
+                opzioniRisposta.forEach(opzione => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = opzione.value;
+                    optionElement.textContent = opzione.text;
+                    selectMenu.appendChild(optionElement);
+                });
+
+                // Aggiungi event listener per feedback immediato
+                selectMenu.addEventListener('change', function() {
+                    valutaSingolaRisposta(this); // Applica stile al menu corrente
+                    aggiornaPunteggioTotale();   // Aggiorna il punteggio generale
+                });
+            }
+        }
+
+        // Aggiorna il punteggio iniziale (sarà 0 su 15)
+        document.addEventListener('DOMContentLoaded', function() {
+            aggiornaPunteggioTotale();
+        });
+
+    </script>
+
+</body>
+</html>
