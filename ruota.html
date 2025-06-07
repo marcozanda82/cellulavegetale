@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programma Allenamento Ab Wheel</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        .container { max-width: 700px; width: 100%; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); opacity: 0; animation: fadeIn 0.5s forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        h1, h2, h3 { text-align: center; color: #2c3e50; }
+        .date-display { text-align: center; font-size: 1.1em; color: #7f8c8d; margin-bottom: 10px; }
+        .status-box { padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; font-size: 1.2em; font-weight: bold; }
+        .workout-day { background-color: #e8f5e9; border: 2px solid #4caf50; color: #2e7d32; }
+        .rest-day { background-color: #fff3e0; border: 2px solid #fb8c00; color: #e65100; }
+        #workout-plan-container { background-color: #ecf0f1; border: 2px solid #bdc3c7; padding: 20px; margin-top: 20px; border-radius: 8px; }
+        #workout-plan-container h3 { margin-top: 0; color: #34495e; }
+        #workout-plan-container p { margin-bottom: 5px; }
+        #workout-plan-container strong { color: #c0392b; }
+        .level-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; color: white; font-size: 0.9em; margin-left: 10px; }
+        .badge-principiante { background-color: #2ecc71; }
+        .badge-intermedio { background-color: #f39c12; }
+        .badge-avanzato { background-color: #e74c3c; }
+        .workout-form { display: flex; flex-direction: column; gap: 15px; margin: 25px 0; }
+        .workout-form div { display: flex; flex-direction: column; }
+        .workout-form label { margin-bottom: 5px; font-weight: bold; color: #555; }
+        .workout-form input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; }
+        .workout-form button { padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; transition: background-color 0.3s; }
+        .workout-form button:hover { background-color: #2980b9; }
+        #history-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        #history-table th, #history-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        #history-table th { background-color: #ecf0f1; color: #2c3e50; font-weight: bold; }
+        /* Sezione Backup */
+        .backup-section { margin-top: 40px; padding-top: 20px; border-top: 2px dashed #bdc3c7; }
+        .backup-section p { font-size: 0.9em; color: #555; }
+        .backup-section textarea { width: 95%; min-height: 80px; margin-top: 10px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        .backup-section button { background-color: #16a085; margin-right: 10px; }
+        .backup-section button:hover { background-color: #117a65; }
+        #clear-history { background-color: #e74c3c; }
+        #clear-history:hover { background-color: #c0392b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Programma Allenamento Ab Wheel</h1>
+        <p class="date-display" id="current-date"></p>
+        <div id="workout-status" class="status-box"></div>
+        <div id="workout-plan-container"></div>
+        <form class="workout-form" id="log-form">
+            <h2>Registra l'allenamento</h2>
+            <div><label for="sets">Serie completate:</label><input type="number" id="sets" name="sets" min="1" required placeholder="Es. 3"></div>
+            <div><label for="reps">Ripetizioni per serie:</label><input type="number" id="reps" name="reps" min="1" required placeholder="Es. 10"></div>
+            <button type="submit">Ho Finito!</button>
+        </form>
+        <h2>Storico Allenamenti</h2>
+        <table id="history-table">
+            <thead><tr><th>Data</th><th>Serie</th><th>Ripetizioni</th></tr></thead>
+            <tbody id="history-body"></tbody>
+        </table>
+        
+        <div class="backup-section">
+            <h2>Backup e Ripristino Dati</h2>
+            <div>
+                <h3>1. Salva i tuoi progressi</h3>
+                <p>Clicca qui per scaricare un file di testo con i tuoi dati. Conservalo in un posto sicuro!</p>
+                <button id="export-data">Esporta i Tuoi Progressi</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <h3>2. Ripristina i tuoi progressi</h3>
+                <p>Se hai perso i dati, apri il file di backup, copia tutto il testo, incollalo qui sotto e clicca "Carica".</p>
+                <textarea id="import-area" placeholder="Incolla qui i dati del tuo file di backup..."></textarea>
+                <button id="import-data">Carica e Ripristina</button>
+            </div>
+             <div style="margin-top: 30px; text-align: center;">
+                 <button id="clear-history">Cancella Storico Corrente</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Il codice JavaScript rimane qui sotto
+        try {
+            document.addEventListener('DOMContentLoaded', () => {
+                // --- SELEZIONE ELEMENTI ---
+                const workoutStatusEl = document.getElementById('workout-status');
+                const logForm = document.getElementById('log-form');
+                const historyBody = document.getElementById('history-body');
+                const clearHistoryBtn = document.getElementById('clear-history');
+                const currentDateEl = document.getElementById('current-date');
+                const planContainer = document.getElementById('workout-plan-container');
+                const exportBtn = document.getElementById('export-data');
+                const importBtn = document.getElementById('import-data');
+                const importArea = document.getElementById('import-area');
+
+                // --- DATI ALLENAMENTO ---
+                const WORKOUT_PLANS = {
+                    principiante: { level: 'Principiante', badge: 'badge-principiante', goal: '2-3 serie da 5-10 ripetizioni', description: 'Esegui l\'esercizio in ginocchio. Concentrati sulla forma e non inarcare la schiena.' },
+                    intermedio: { level: 'Intermedio', badge: 'badge-intermedio', goal: '3-4 serie da 12-15 ripetizioni', description: 'Aumenta l\'escursione del movimento. Mantieni sempre il core contratto.' },
+                    avanzato: { level: 'Avanzato', badge: 'badge-avanzato', goal: '3-5 serie da 15-20+ ripetizioni', description: 'Massima escursione. Prova a partire dalla posizione in piedi se padroneggi la tecnica.' }
+                };
+                
+                // --- FUNZIONI PRINCIPALI ---
+                const loadHistory = () => { try { const d = localStorage.getItem('abWheelHistory'); return d ? JSON.parse(d) : []; } catch (e) { return []; } };
+                const updateHistoryTable = (h) => { historyBody.innerHTML = ''; h.forEach(e => { const r = document.createElement('tr'); r.innerHTML = `<td>${e.date}</td><td>${e.sets}</td><td>${e.reps}</td>`; historyBody.appendChild(r); }); };
+
+                const updateWorkoutPlan = (h) => {
+                    const totalWorkouts = h.length;
+                    let key = 'principiante';
+                    if (totalWorkouts >= 15) key = 'avanzato'; else if (totalWorkouts >= 5) key = 'intermedio';
+                    
+                    const plan = WORKOUT_PLANS[key];
+                    planContainer.innerHTML = `<h3>Il Tuo Allenamento <span class="level-badge ${plan.badge}">${plan.level}</span></h3><p><strong>Obiettivo:</strong> ${plan.goal}</p><p><strong>Focus:</strong> ${plan.description}</p>`;
+                    
+                    const savedLevel = localStorage.getItem('abWheelLevel');
+                    if (savedLevel !== key) {
+                        localStorage.setItem('abWheelLevel', key);
+                        if (savedLevel) setTimeout(() => alert(`Congratulazioni! Sei passato al livello ${plan.level}!`), 500);
+                    }
+                };
+                
+                // --- LOGICA DI AVVIO ---
+                let history = loadHistory();
+                updateHistoryTable(history);
+                updateWorkoutPlan(history);
+
+                const today = new Date();
+                const todayFormatted = today.toLocaleDateString('it-IT');
+                currentDateEl.textContent = `Oggi è ${today.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+                
+                let isWorkoutDay = true;
+                const lastEntry = history.length > 0 ? history[history.length - 1] : null;
+                if (lastEntry && lastEntry.date === todayFormatted) isWorkoutDay = false;
+                else if (lastEntry) {
+                    const lastDate = new Date(lastEntry.date.split('/').reverse().join('-'));
+                    const yesterday = new Date();
+                    yesterday.setDate(today.getDate() - 1);
+                    if (lastDate.setHours(0,0,0,0) === yesterday.setHours(0,0,0,0)) isWorkoutDay = false;
+                }
+
+                if (isWorkoutDay) {
+                    workoutStatusEl.textContent = 'Oggi è un giorno di ALLENAMENTO!';
+                    workoutStatusEl.className = 'status-box workout-day';
+                    logForm.style.display = 'flex';
+                    planContainer.style.display = 'block';
+                } else {
+                    workoutStatusEl.textContent = 'Oggi è un giorno di RIPOSO.';
+                    workoutStatusEl.className = 'status-box rest-day';
+                    logForm.style.display = 'none';
+                    planContainer.style.display = 'none';
+                }
+
+                // --- GESTIONE EVENTI ---
+                logForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    history.push({ date: todayFormatted, sets: document.getElementById('sets').value, reps: document.getElementById('reps').value });
+                    localStorage.setItem('abWheelHistory', JSON.stringify(history));
+                    updateHistoryTable(history);
+                    updateWorkoutPlan(history);
+                    logForm.reset();
+                    workoutStatusEl.textContent = 'Oggi è un giorno di RIPOSO. Ottimo lavoro!';
+                    workoutStatusEl.className = 'status-box rest-day';
+                    logForm.style.display = 'none';
+                    planContainer.style.display = 'none';
+                });
+                
+                clearHistoryBtn.addEventListener('click', () => {
+                    if (confirm('Sei sicuro di voler cancellare tutto lo storico? Questa azione è irreversibile.')) {
+                        localStorage.removeItem('abWheelHistory');
+                        localStorage.removeItem('abWheelLevel');
+                        location.reload();
+                    }
+                });
+
+                // --- NUOVA LOGICA DI BACKUP/RIPRISTINO ---
+                exportBtn.addEventListener('click', () => {
+                    const level = localStorage.getItem('abWheelLevel') || 'principiante';
+                    if (history.length === 0) {
+                        alert('Non ci sono dati da esportare!');
+                        return;
+                    }
+                    const backupData = { level, history };
+                    const jsonString = JSON.stringify(backupData, null, 2);
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const date = new Date().toISOString().slice(0, 10);
+                    a.download = `backup_ab_wheel_${date}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    alert('File di backup scaricato con successo!');
+                });
+
+                importBtn.addEventListener('click', () => {
+                    const text = importArea.value;
+                    if (!text) {
+                        alert('Incolla i dati del backup nell\'area di testo prima di caricare.');
+                        return;
+                    }
+                    try {
+                        const importedData = JSON.parse(text);
+                        // Validazione semplice dei dati importati
+                        if (!importedData.level || !Array.isArray(importedData.history)) {
+                            throw new Error('Formato dati non valido.');
+                        }
+                        
+                        if (confirm('Stai per sovrascrivere i dati attuali con quelli del backup. Sei sicuro?')) {
+                            localStorage.setItem('abWheelLevel', importedData.level);
+                            localStorage.setItem('abWheelHistory', JSON.stringify(importedData.history));
+                            alert('Dati ripristinati con successo! La pagina verrà ricaricata.');
+                            location.reload();
+                        }
+                    } catch (error) {
+                        alert('Errore: I dati inseriti non sono validi o sono corrotti. Assicurati di aver incollato l\'intero e corretto testo del file di backup.');
+                    }
+                });
+            });
+        } catch (e) {
+            document.body.innerHTML = `<h1>Oops! Qualcosa è andato storto.</h1><p>Errore: ${e.message}</p>`;
+            console.error(e);
+        }
+    </script>
+</body>
+</html>
